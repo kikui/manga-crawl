@@ -1,0 +1,27 @@
+{
+  "name": "manga-crawl",
+  "version": "1.0.0",
+  "description": "Download les images d'un manga en ligne, track des mangas, afﬁche les nouveautés ",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "bin": {
+    "manga-crawl": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kikui/manga-crawl.git"
+  },
+  "author": "adrien et aymeric",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kikui/manga-crawl/issues"
+  },
+  "homepage": "https://github.com/kikui/manga-crawl#readme",
+  "dependencies": {
+    "commander": "^2.14.1",
+    "inquirer": "^5.1.0",
+    "request": "^2.83.0"
+  }
+}
