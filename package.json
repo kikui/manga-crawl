@@ -22,6 +22,7 @@
   "dependencies": {
     "commander": "^2.14.1",
     "inquirer": "^5.1.0",
+    "mal-api": "^2.0.0",
     "request": "^2.83.0"
   }
 }

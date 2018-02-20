@@ -1,6 +1,13 @@
 #!/usr/bin/env node 
 const program = require('commander') 
 const request = require('request');
+const MalApi = require ( ' mal-api ' )
+
+const mal = nouveau MalApi ( {    
+  var authenName = "kikuiredkill", 
+  var password = "aqwzsxedc13456789"
+} )
+
 // Conﬁguration des paramètres attendus 
 program  
     .version('1.0.0')  
@@ -25,14 +32,71 @@ program
 // On parse (convertit en format utilisable) les options 
 // fonction synchrone 
 program.parse(process.argv) 
-// Maintenant on peut les utiliser 
-if (program.settings) 
-{  
-    
-}else if (program.animelist) 
-{  
-    let username = program.animelist;
-    console.log(username);
+
+switch(program){
+    case 'setting' :
+        break;
+    case 'animelist' :
+        break;
+    case 'anime' :
+        break;
+    case 'history' :
+        break;
+    case 'animeserch' :
+        break;
+    case 'animetop' :
+        break;
+    case 'animepopular' :
+        break;
+    case 'animeupcoming' :
+        break;
+    case 'mangalist' :
+        break;
+    case 'manga' :
+        break;
+    case 'mangaserch' :
+        break;
+    case 'addanime' :
+        break;
+    case 'updateanime' :
+        break;
+    case 'deleteanime' :
+        break;
+    case 'addmanga' :
+        break;
+    case 'updatemanga' :
+        break;
+    case 'deletemanga' : 
+        break;
+    case default :
+        program.help();
+}
+
+var verifyAuthen = function(){
+    mal.account.verifyCredentials()
+        .then(res => console.log(res))
+        .catch(err => done(err))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*let username = program.animelist;
+    //console.log(username);
     let url = `http://mal-api.com/animelist/${username}`;
 
     request(url, function (err, response, body) {
@@ -49,55 +113,6 @@ if (program.settings)
                 //console.log("city liste feature :"+cityFeature);
             });
         }
-    });
-} else if (program.anime) 
-{  
-    
-} else if (program.history) 
-{  
-    
-}else if (program.animeserch) 
-{  
-    
-}else if (program.animetop) 
-{  
-    
-}else if (program.animepopular) 
-{  
-    
-}else if (program.animeupcoming) 
-{  
-    
-}else if (program.mangalist) 
-{  
-    
-}else if (program.manga) 
-{  
-    
-}else if (program.mangaserch) 
-{  
-    
-}else if (program.addanime) 
-{  
-    
-}else if (program.updateanime) 
-{  
-    
-}else if (program.deleteanime) 
-{  
-    
-}else if (program.addmanga) 
-{  
-    
-}else if (program.updatemanga) 
-{  
-    
-}else if (program.deletemanga) 
-{  
-    
-}else 
-{  
-    program.help() 
-}
+    });*/
 
 //fonction d authentification
