@@ -14,11 +14,7 @@ program
     .option('-s, --settings', 'configure your acount')
     .option('-al, --animelist [username]', 'Read an anime list')
     .option('-a, --anime [animename]', 'Read an anime\'s details')  
-    .option('-h, --history [username]', 'Read a user\'s history') 
     .option('-as, --animeserch [animename]', 'Search anime')
-    .option('-at, --animetop', 'Read the top anime')
-    .option('-ap, --animepopular', 'Read the popular anime')
-    .option('-au, --animeupcoming', 'Read the upcoming anime')
     .option('-ml, --mangalist [username]', 'Read a manga list')
     .option('-m, --manga [manganame]', 'Read an manga\'s details')
     .option('-ms, --mangaserch [manganame]', 'Search manga')
@@ -29,8 +25,7 @@ program
     .option('-um, --updatemanga [manganame]', 'Update a manga on user\'s manga list')
     .option('-dm, --deletemanga [manganame]', 'Delete a manga from user\'s manga list')
 
-// On parse (convertit en format utilisable) les options 
-// fonction synchrone 
+
 program.parse(process.argv) 
 
 switch(program){
@@ -39,16 +34,13 @@ switch(program){
     case 'animelist' :
         break;
     case 'anime' :
-        break;
-    case 'history' :
+        let anime = serchAnime(program.anime);
+        console.log("voici les détails de l'anime\n");
+        console.log('nom : ${anime.title} \n nombre d\'episode : ${anime.episodes} \n status de l\'anime : ${anime.status} \n start date : ${anime.start_date} \n end date : ${anime.end_date} \n synopsis : ${anime.synopsis}');
         break;
     case 'animeserch' :
-        break;
-    case 'animetop' :
-        break;
-    case 'animepopular' :
-        break;
-    case 'animeupcoming' :
+        if(serchAnime =! null)
+            console.log("${program.animeserch} a été trouver dans la BDD !");
         break;
     case 'mangalist' :
         break;
@@ -78,6 +70,46 @@ var verifyAuthen = function(){
         .catch(err => done(err))
 }
 
+var serchAnime = function(string name){
+    mal.manga.searchManga(name)
+        .then(res => {
+            //console.log(res);
+            return res;
+        })
+        .catch(err => console.error(err))
+}
+
+var serchManga = function(string name){
+    mal.manga.searchManga(name)
+        .then(res => {
+            console.log(res);
+            return res;
+        })
+        .catch(err => console.error(err))
+}
+
+var addAnime = function(string name, int score){
+    serchAnime(name).then((anime) => {
+        let animeId = anime.id;
+        mal.anime.addAnime(animeId, {
+            score: score;
+        });
+        console.log(name + " a été ajouter à votre liste !");
+    }).catch(err => console.error(err))
+}
+
+var addManga = function(string name, int score){
+    serchManga(name).then((manga) => {
+        let mangaId = manga.id;
+        mal.manga.addManga(mangaId, {
+            score: score;
+        });
+        console.log(name + " a été ajouter à votre liste !");
+    }).catch(err => console.error(err))
+}
+
+//fonction update anime/manga
+//fonction delete anime/manga
 
 
 
