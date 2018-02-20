@@ -1,5 +1,6 @@
 #!/usr/bin/env node 
 const program = require('commander') 
+const request = require('request');
 // Conﬁguration des paramètres attendus 
 program  
     .version('1.0.0')  
@@ -30,7 +31,25 @@ if (program.settings)
     
 }else if (program.animelist) 
 {  
-    
+    let username = program.animelist;
+    console.log(username);
+    let url = `http://mal-api.com/animelist/${username}`;
+
+    request(url, function (err, response, body) {
+        if(err){
+            console.log(err);
+        } else {
+            let animes = JSON.parse(body);
+            console.log(animes);
+            
+            console.log("voici la liste des animes de "+username);
+            animes.forEach(function(anime){
+                //console.log(anime);
+                animeName = anime.title;
+                //console.log("city liste feature :"+cityFeature);
+            });
+        }
+    });
 } else if (program.anime) 
 {  
     
@@ -81,3 +100,4 @@ if (program.settings)
     program.help() 
 }
 
+//fonction d authentification
