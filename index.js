@@ -2,11 +2,22 @@
 const program = require('commander');
 const MalApi = require ('mal-api');
 const inquirer = require('inquirer');
-const sqlite3 = require('sqlite3').verbose();
-const fs = require('fs') 
+var sqlite3 = require('sqlite3').verbose();
+const XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
-/*var dbManga = new sqlite3.Database('./manga.db');
-var dbAnime = new sqlite3.Database('./anime.db');*/
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------initialisation-BDD
+
+var db = new sqlite3.Database('mydb.db', (err) => {
+    if(err){
+        console.log("ERREUR ouverture de la bdd")
+    }
+    //console.log("log du db")  
+});
+
+db.serialize(function() {
+    db.run("CREATE TABLE if not exists manga(title TEXT, idmanga TEXT, chapters TEXT, volumes TEXT, status TEXT, start_date TEXT, end_date TEXT, synopsis TEXT)");
+    db.run("CREATE TABLE if not exists anime(title TEXT, idanime TEXT, episodes TEXT, status TEXT, start_date TEXT, end_date TEXT, synopsis TEXT)");
+});
 
 
 var username = "kikuiredkill";
@@ -17,20 +28,22 @@ const mal = new MalApi ( {
   password,
 } )
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------initialisation-des-options
+
 // Conﬁguration des paramètres attendus 
 program  
     .version('1.0.0')  
-    .option('-s, --settings', 'configure your acount')
     .option('-a, --anime [animename]', 'Read an anime\'s details') //OK 
     .option('--as, --animesearch [animename]', 'Verify if anime exist') //OK 
     .option('-m, --manga [manganame]', 'Read an manga\'s details') //OK 
     .option('--ms, --mangasearch [manganame]', 'Search manga') //OK 
-    .option('--aa, --addanime [animename]', 'Add anime to anime list')
-    .option('--da, --deleteanime [animename]', 'Delete an anime from user\'s anime list')
-    .option('--am, --addmanga [manganame]', 'Add manga to manga list')
-    .option('--dm, --deletemanga [manganame]', 'Delete a manga from user\'s manga list')
-    .option('--la, --listanime', 'Display your anime list')
-    .option('--lm, --listmanga', 'Display your manga list')
+    .option('--aa, --addanime [animename]', 'Add anime to anime list') //OK
+    .option('--da, --deleteanime', 'Delete an anime from user\'s anime list') //OK
+    .option('--am, --addmanga [manganame]', 'Add manga to manga list') //OK
+    .option('--dm, --deletemanga', 'Delete a manga from user\'s manga list') //OK
+    .option('--la, --listanime', 'Display your anime list') //OK
+    .option('--lm, --listmanga', 'Display your manga list') //OK
+    .option('-b, --bonus', 'Bonus party') //OK
 
 
 program.parse(process.argv) 
@@ -47,12 +60,6 @@ var SearchAnime = async function(name){
     return data
 }
 
-var verifyAuthen = function(){
-    mal.account.verifyCredentials()
-        .then(res => console.log(res))
-        .catch(err => done(err))
-}
-
 var SearchManga = async function(name){
     let data
     await mal.manga.searchManga(name)
@@ -64,55 +71,27 @@ var SearchManga = async function(name){
     return data
 }
 
-var addAnime = function(name, score){
-    serchAnime(name).then((anime) => {
-        let animeId = anime.id;
-        mal.anime.addAnime(animeId, {
-            score: score
-        });
-        console.log(name + " a été ajouter à votre liste !");
-    }).catch(err => console.error(err))
+var GetWeather = function(){
+    let url = "http://api.openweathermap.org/data/2.5/weather?q=bordeaux&units=metric&APPID=1b4b96d0d441510338048c66a9e19ae3";
+    requestWeather = new XMLHttpRequest();
+    requestWeather.open("get", url, true);
+    requestWeather.onload = function() {
+        var results = JSON.parse(requestWeather.responseText);
+        console.log("A Bordeaux il fait actuellement : "+ results.main.temp+ "°C")
+    }
+    requestWeather.send();
+    
 }
 
-var addManga = function(name, score){
-    serchManga(name).then((manga) => {
-        let mangaId = manga.id;
-        mal.manga.addManga(mangaId, {
-            score: score
-        });
-        console.log(name + " a été ajouter à votre liste !");
-    }).catch(err => console.error(err))
-}
-
-var init = function(){
-    console.log("debut création du fichier !")
-    fs.appendFile('anime.txt', function (err) {
-        if (err) throw err;
-        console.log('Saved!');
-    });
-    //fs.appendFile('manga.bd');
-    /*dbAnime.run(sql, params, function(err){
-        // 
-    });
-    dbManga.run(sql, params, function(err){
-        // 
-    });*/
-}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------Gestion-des-options
-
-init();
 
 if(program.settings) {
     console.log('settings')
-    dbAnime.close();
-    dbManga.close();
+    db.close();
 }
 else if(program.anime) {
-    /*console.log("voici les détails de l'anime\n");
-    console.log('nom : ${anime.title} \n nombre d\'episode : ${anime.episodes} \n status de l\'anime : ${anime.status} \n start date : ${anime.start_date} \n end date : ${anime.end_date} \n synopsis : ${anime.synopsis}');*/
     SearchAnime(program.anime).then((animeData) => {
         //console.log(animeData)
-        //gérer le tableau d objet
         console.log("voici la liste trouvé avec le mot clef : "+program.anime+"\n")
         for(var item in animeData){
             console.log(animeData[item].title + ",  id : " + animeData[item].id)
@@ -130,15 +109,13 @@ else if(program.anime) {
                     if(animeData[item2].id == answers.selectedAnime){
                         //display data wanted
                         console.log("voici les détails de l'anime :\n");
-                        //traitement du synopsis. supprimer des elements. comme les balise <br>
                         console.log(` nom : ${animeData[item2].title} \n nombre d\'episode : ${animeData[item2].episodes} \n status de l\'anime : ${animeData[item2].status} \n start date : ${animeData[item2].start_date} \n end date : ${animeData[item2].end_date} \n\n synopsis : \n${animeData[item2].synopsis}`);
                     }
                 }
             })
 
     })
-    /*dbAnime.close();
-    dbManga.close();*/
+    db.close();
 }
 else if(program.animesearch) {
     //console.log('animesearch', program.animesearch)
@@ -152,8 +129,7 @@ else if(program.animesearch) {
                 console.log(animeData[item].title)
         }
     })
-    /*dbAnime.close();
-    dbManga.close();*/
+    db.close();
 }
 else if(program.manga){
     SearchManga(program.manga).then((mangaData) => {
@@ -179,8 +155,7 @@ else if(program.manga){
                 }
             })
     })
-    /*dbAnime.close();
-    dbManga.close();*/
+    db.close();
 }
 else if(program.mangasearch){
     SearchManga(program.mangasearch).then((animeData) => {
@@ -191,35 +166,234 @@ else if(program.mangasearch){
                 console.log(animeData[item].title)
         }
     })
-    /*dbAnime.close();
-    dbManga.close();*/
+    db.close();
 }
 else if(program.addanime){
-    /*dbAnime.close();
-    dbManga.close();*/
+    SearchAnime(program.addanime).then((animeData) => {
+        console.log("voici la liste trouvé avec le mot clef : "+program.addanime+"\n")
+        for(var item in animeData){
+            console.log(animeData[item].title + ",  id : " + animeData[item].id)
+        }
+        inquirer.prompt([
+            {    
+                type: 'input',    
+                message: "Entrez l'id de l'anime à sauvegarder : ",    
+                name: 'selectedAnime'  
+            }
+        ]).then((answers) => 
+            {  
+                //console.log(answers.selectedAnime) 
+                for(var item2 in animeData){
+                    if(animeData[item2].id == answers.selectedAnime){
+                        console.log("correspondence trouvé !")
+                        db.run("INSERT INTO anime(title, idanime, episodes, status, start_date, end_date, synopsis) VALUES(?,?,?,?,?,?)", [`${animeData[item2].title}`,`${animeData[item2].id}`, `${animeData[item2].episodes}`,`${animeData[item2].status}`,`${animeData[item2].start_date}`,`${animeData[item2].end_date}`,`${animeData[item2].synopsis}`], function(err) {
+                            if (err) {
+                                //SQLITE_MISUSE: Database is closed ! pourquoi ?
+                                //j arrive pas a ecrire dans la bdd
+                                return console.log("erreur : "+err.message);
+                            }else{
+                                console.log("L'anime à été ajouté à votre list ! vous pouvez avoir acces à votre liste avec la commande : manga-crawl --la");
+                            }
+                        });
+                    }
+                }
+            })
+    })
+    db.close();
 }
 else if(program.addmanga){
-    /*dbAnime.close();
-    dbManga.close();*/
+    SearchManga(program.addmanga).then((mangaData) => {
+        console.log("voici la liste trouvé avec le mot clef : "+program.addmanga+"\n")
+        for(var item in mangaData){
+            console.log(mangaData[item].title + ",  id : " + animeData[item].id)
+        }
+        inquirer.prompt([
+            {    
+                type: 'input',    
+                message: "Entrez l'id du manga à sauvegarder : ",    
+                name: 'selectedManga'  
+            }
+        ]).then((answers) => 
+            {  
+                //console.log(answers.selectedManga) 
+                for(var item2 in animeData){
+                    if(mangaData[item2].id == answers.selectedManga){
+                        console.log("correspondence trouvé !")
+                        db.run("INSERT INTO manga(title, idmanga, chapters, volumes, status, start_date, end_date, synopsis) VALUES(?,?,?,?,?,?)", [`${mangaData[item2].title}`, `${mangaData[item2].id}`,`${mangaData[item2].chapters}`,`${mangaData[item2].volumes}`,`${mangaData[item2].status}`,`${mangaData[item2].start_date}`,`${mangaData[item2].end_date}`,`${mangaData[item2].synopsis}`], function(err) {
+                            if (err) {
+                                //SQLITE_MISUSE: Database is closed ! pourquoi ?
+                                //j arrive pas a ecrire dans la bdd
+                                return console.log("erreur : "+err.message);
+                            }else{
+                                console.log("Le manga à été ajouté à votre list ! vous pouvez avoir acces à votre liste avec la commande : manga-crawl --lm");
+                            }
+                        });
+                    }
+                }
+            })
+    })
+    db.close();
 }
 else if(program.deleteanime){
-    /*dbAnime.close();
-    dbManga.close();*/
+    let sql = "SELECT title, id FROM anime ORDER BY title";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            console.log(err);
+        }
+        rows.forEach((row) => {
+            console.log(row.title + ", id : " + row.id);
+        });
+    });
+    inquirer.prompt([
+            {    
+                type: 'input',    
+                message: "Entrez l'ID de l'anime à supprimer de votre liste : ",    
+                name: 'animeSelected'  
+            }
+    ]).then((answers) => {
+        db.run(`DELETE FROM anime WHERE idanime=?`, answers.animeSelected, function(err) {
+            if (err) {
+                return console.error(err.message);
+            }
+            console.log("Anime supprimer avec succes !");
+        });
+    })
+    db.close();
 }
 else if(program.deletemanga){
-    /*dbAnime.close();
-    dbManga.close();*/
+    let sql = "SELECT title, id FROM manga ORDER BY title";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            throw err;
+        }
+        rows.forEach((row) => {
+            console.log(row.title + ", id : " + row.id);
+        });
+    });
+    inquirer.prompt([
+            {    
+                type: 'input',    
+                message: "Entrez l'ID du manga à supprimer de votre liste : ",    
+                name: 'mangaSelected'  
+            }
+    ]).then((answers) => {
+        db.run(`DELETE FROM manga WHERE idmanga=?`, answers.mangaSelected, function(err) {
+            if (err) {
+                return console.error(err.message);
+            }
+            console.log("Manga supprimer avec succes !");
+        });
+    })
+    db.close();
 }
 else if(program.listanime){
-    /*dbAnime.close();
-    dbManga.close();*/
+    console.log("Voici votre liste d'anime : ")
+    let sql = "SELECT title, id FROM anime ORDER BY title";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            throw err;
+        }
+        rows.forEach((row) => {
+            console.log(row.title + ", id : " + row.id);
+        });
+    });
+    inquirer.prompt([
+            {    
+                type: 'input',    
+                message: "Voulez vous voire les details d un anime ? yes/no : ",    
+                name: 'response'  
+            }
+        ]).then((answers) => 
+            {  
+                if(answers.response == "yes"){
+                    inquirer.prompt([
+                        {
+                            type: 'input',    
+                            message: "Entrez l'ID de l'anime souhaiter : ",    
+                            name: 'animeSelected'
+                        }
+                    ]).then((answers) =>{
+                        let sql = `SELECT * FROM anime WHERE id=?`;
+                        db.each(sql, [answers.animeSelected], (err, row) => {
+                            if (err) {
+                                throw err;
+                            }
+                            console.log("voici les details de l'anime :");
+                            console.log(row.title + ", id : " + row.id);
+                            console.log("nombre d'épisodes : "+row.episodes);
+                            console.log("status de l'anime : "+row.status);
+                            console.log("date de debut : "+row.start_date);
+                            console.log("date de fin : "+row.end_date);
+                            console.log("synopsis : "+row.synopsis);
+                        });
+                    })
+                }
+                else if(answers.response == "no"){
+                    console.log("OK bonne journée !")
+                }
+                else{
+                    console.log("input error !")
+                }
+            })
+    db.close();
 }
 else if(program.listmanga){
-    /*dbAnime.close();
-    dbManga.close();*/
+    console.log("Voici votre liste de manga : ")
+    let sql = "SELECT title, id FROM manga ORDER BY title";
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            console.log(err);
+        }
+        rows.forEach((row) => {
+            console.log(row.title + ", id : " + row.id);
+        });
+    });
+    inquirer.prompt([
+            {    
+                type: 'input',    
+                message: "Voulez vous voire les details d un manga ? yes/no : ",    
+                name: 'response'  
+            }
+        ]).then((answers) => 
+            {  
+                if(answers.response == "yes"){
+                    inquirer.prompt([
+                        {
+                            type: 'input',    
+                            message: "Entrez l'ID du manga souhaité : ",    
+                            name: 'mangaSelected'
+                        }
+                    ]).then((answers) =>{
+                        let sql = `SELECT * FROM manga WHERE id=?`;
+                        db.each(sql, [answers.mangaSelected], (err, row) => {
+                            if (err) {
+                                throw err;
+                            }
+                            console.log("voici les details de l'anime :");
+                            console.log(row.title + ", id : " + row.id);
+                            console.log("nombre d'épisodes : "+row.chapters);
+                            console.log("nombre d'épisodes : "+row.volumes);
+                            console.log("status de l'anime : "+row.status);
+                            console.log("date de debut : "+row.start_date);
+                            console.log("date de fin : "+row.end_date);
+                            console.log("synopsis : "+row.synopsis);
+                        });
+                    })
+                }
+                else if(answers.response == "no"){
+                    console.log("OK bonne journée !")
+                }
+                else{
+                    console.log("input error !")
+                }
+            })
+    db.close();
+}
+else if(program.bonus){
+    console.log("petit bonus !")
+    GetWeather()
 }
 else{
-    program.help();
-    /*dbAnime.close();
-    dbManga.close();*/
+    db.close();
+    program.help(); 
 }
